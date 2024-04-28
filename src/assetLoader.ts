@@ -9,3 +9,9 @@ export async function loadImage(key: string, fileName: string) {
   assets.set(key, image);
   return assets.get(key);
 }
+
+export async function loadJSON(key: string, fileName: string) {
+  const json = await fetch(fileName).then((res) => res.json());
+  assets.set(key, json);
+  return assets.get(key);
+}

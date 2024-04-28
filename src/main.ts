@@ -1,24 +1,27 @@
-import { loadImage } from "./assetLoader";
+import { loadImage, loadJSON } from "./assetLoader";
+import InputComponent from "./ecs/components/InputComponent";
+import PositionComponent from "./ecs/components/PositionComponent";
+import RenderableComponent from "./ecs/components/RenderableComponent";
+import VelocityComponent from "./ecs/components/VelocityComponent";
+import Entity from "./ecs/entities/_entity";
+import InputSystem from "./ecs/systems/InputSystem";
+import MovementSystem from "./ecs/systems/MovementSystem";
+import RenderSystem from "./ecs/systems/RenderSystem";
+import TileMapSystem from "./ecs/systems/TileMapSystem";
 import "./style.css";
+const tileSize = 16;
 
 window.onload = async () => {
-  const jsonData = JSON.parse(
-    await fetch("/assets/map.json").then((res) => res.text())
-  );
-  let tileSize = 16;
-  let canvas = document.querySelector<HTMLCanvasElement>("#canvas");
-  if (!canvas) {
-    throw new Error("Canvas not found");
-  }
-  let ctx = canvas.getContext("2d");
-
-  if (!ctx) {
-    throw new Error("Canvas context not found");
-  }
-
-  const tiles = await loadImage("tiles", "/assets/tiles.png");
-  console.log(tiles);
-
+  let canvas = getCanvas();
+  let ctx = getCanvasContext(canvas);
+  const tileAtlas = await loadImage("tileAtlas", "assets/tiles.png");
+  const playerAtlas = await loadImage("playerAtlas", "assets/player.png");
+  const jsonData = await loadJSON("mapData", "assets/map.json");
+  const mapData = convertArrayTo2D(jsonData.layers[0].data, jsonData.width);
+  const entities = [];
+  const tileMapSystem = new TileMapSystem(mapData, tileSize, tileAtlas);
+  tileMapSystem.initialize();
+  entities.push(...tileMapSystem.entities);
   setupCanvas(
     canvas,
     ctx,
@@ -26,7 +29,24 @@ window.onload = async () => {
     tileSize * jsonData.height
   );
 
-  drawMapLayers(jsonData, ctx, tileSize, tiles);
+  const player = new Entity();
+  player.addComponent(new PositionComponent(0, 0));
+  player.addComponent(new VelocityComponent());
+  player.addComponent(new InputComponent());
+  player.addComponent(new RenderableComponent(playerAtlas, 1));
+
+  entities.push(player);
+
+  const renderSystem = new RenderSystem(ctx, tileSize);
+  renderSystem.entities = entities;
+
+  const inputSystem = new InputSystem();
+  inputSystem.entities = entities;
+
+  const movementSystem = new MovementSystem();
+  movementSystem.entities = entities;
+
+  // drawMapLayers(jsonData, ctx, tileSize, tileAtlas);
 
   function setupCanvas(
     canvas: HTMLCanvasElement,
@@ -38,7 +58,42 @@ window.onload = async () => {
     canvas.height = height;
     ctx.imageSmoothingEnabled = false;
   }
+
+  function draw() {
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    renderSystem.draw();
+  }
+
+  function update(deltaTime: number) {
+    movementSystem.update(deltaTime);
+  }
+  let lastTime = performance.now();
+  function gameLoop(currentTime: number) {
+    const deltaTime = currentTime - lastTime / 1000;
+    update(deltaTime);
+    draw();
+    lastTime = currentTime;
+    requestAnimationFrame(() => gameLoop(deltaTime));
+  }
+
+  requestAnimationFrame(gameLoop);
 };
+
+function getCanvas(): HTMLCanvasElement {
+  let canvas = document.querySelector<HTMLCanvasElement>("#canvas");
+  if (!canvas) {
+    throw new Error("Canvas not found");
+  }
+  return canvas;
+}
+
+function getCanvasContext(canvas: HTMLCanvasElement) {
+  let ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Canvas context not found");
+  }
+  return ctx;
+}
 
 function convertArrayTo2D(array: any[], width: number) {
   let result = [];
@@ -83,7 +138,6 @@ function drawTile(
   tileType: number,
   image: HTMLImageElement
 ) {
-  console.log(tileType);
   if (tileType === 0) {
     return;
   }
