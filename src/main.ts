@@ -1,3 +1,4 @@
+import { loadImage } from "./assetLoader";
 import "./style.css";
 
 window.onload = async () => {
@@ -14,6 +15,10 @@ window.onload = async () => {
   if (!ctx) {
     throw new Error("Canvas context not found");
   }
+
+  const tiles = await loadImage("tiles", "/assets/tiles.png");
+  console.log(tiles);
+
   setupCanvas(
     canvas,
     ctx,
@@ -21,13 +26,13 @@ window.onload = async () => {
     tileSize * jsonData.height
   );
 
-  drawMapLayers(jsonData, ctx, tileSize);
+  drawMapLayers(jsonData, ctx, tileSize, tiles);
 
   function setupCanvas(
     canvas: HTMLCanvasElement,
     ctx: CanvasRenderingContext2D,
-    width = window.innerWidth,
-    height = window.innerHeight
+    width: number,
+    height: number
   ) {
     canvas.width = width;
     canvas.height = height;
@@ -46,8 +51,10 @@ function convertArrayTo2D(array: any[], width: number) {
 function drawMapLayers(
   jsonData: any,
   ctx: CanvasRenderingContext2D,
-  tileSize: number
+  tileSize: number,
+  image: HTMLImageElement
 ) {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   let layers = jsonData.layers;
   for (let layer of layers) {
     let data = layer.data;
@@ -62,15 +69,36 @@ function drawMapLayers(
         }
         let x = col * tileSize;
         let y = row * tileSize;
-        if (tile == 1) {
-          ctx.fillStyle = "black";
-        }
-
-        if (tile == 2) {
-          ctx.fillStyle = "green";
-        }
-        ctx.fillRect(x, y, tileSize, tileSize);
+        drawTile(ctx, x, y, tileSize, tile, image);
       }
     }
+  }
+}
+
+function drawTile(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  tileSize: number,
+  tileType: number,
+  image: HTMLImageElement
+) {
+  console.log(tileType);
+  if (tileType === 0) {
+    return;
+  }
+  if (tileType === 1) {
+    ctx.drawImage(image, 0, 0, tileSize, tileSize, x, y, tileSize, tileSize);
+    return;
+  }
+
+  if (tileType === 2) {
+    ctx.drawImage(image, 16, 0, tileSize, tileSize, x, y, tileSize, tileSize);
+    return;
+  }
+
+  if (tileType === 3) {
+    ctx.drawImage(image, 32, 0, tileSize, tileSize, x, y, tileSize, tileSize);
+    return;
   }
 }

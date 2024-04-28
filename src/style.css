@@ -1,8 +1,33 @@
-#app {
-  text-align: center;
-  height: 100vh;
+html,
+body {
+  padding: 0;
+  margin: 0;
+  height: "100%";
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  --form-height: 6rem;
+  --form-content-size: 2rem;
+  background-color: black;
 }
 
 canvas {
-  margin-top: 60px;
+  width: 100%;
+  background-color: black;
+  object-fit: contain;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  height: 100%;
+}
+
+img {
+  display: none;
+}
+
+main {
+  display: flex;
+  max-width: 50%;
+  max-height: 50%;
 }

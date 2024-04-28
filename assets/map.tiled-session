@@ -7,6 +7,9 @@
     "expandedProjectPaths": [
     ],
     "fileStates": {
+        "": {
+            "scaleInDock": 1
+        }
     },
     "last.exportedFilePath": "F:/_personal/_js/pokeman/assets",
     "last.imagePath": "F:/_personal/_js/pokeman/assets",
@@ -20,6 +23,7 @@
     "project": "map.tiled-project",
     "recentFiles": [
     ],
+    "tileset.embedInMap": true,
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {
         "height": 16,
